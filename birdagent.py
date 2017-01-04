@@ -21,7 +21,7 @@ birdagent - agentx code for the bird routing daemon
 
 from adv_agentx import AgentX
 from adv_agentx import SnmpGauge32,SnmpCounter32,SnmpIpAddress
-import time,re,subprocess,glob
+import time,re,subprocess,glob,datetime
 
 class BirdAgent:
 
@@ -41,7 +41,7 @@ class BirdAgent:
 
 	_re_config_include = re.compile("^include\s*\"(/[^\"]*)\".*$")
 	_re_config_bgp_proto_begin = re.compile("^protocol bgp ([a-zA-Z0-9_]+) \{$")
-	_re_config_local_as = re.compile("local ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) as ([0-9]+);")
+	_re_config_local_as = re.compile("local (.*) as (.*);")
 	_re_config_bgp_holdtime = re.compile("hold time ([0-9]+);")
 	_re_config_bgp_keepalive = re.compile("keepalive time ([0-9]+);")
 	_re_config_remote_peer = re.compile("neighbor ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) as ([0-9]+);")
@@ -234,7 +234,9 @@ class BirdAgent:
 			match = self._re_birdcli_bgp_begin.search(line)
 			if match:
 				bgp_proto = match.group(1)
-				timestamp = int(match.group(2))
+				x = datetime.datetime.strptime(match.group(2),'%H:%M:%S')
+				timestamp = int(x.second+x.minute*60+x.hour*3600)
+				#timestamp = int(time.strptime(match.group(2),'%H:%M:%S').total_seconds())
 				if not state["bgp-peers"].has_key(bgp_proto):
 					print("WARNING: proto \"%s\" not in config, skipping"%bgp_proto)
 					continue
@@ -287,6 +289,5 @@ class BirdAgent:
 				continue
 			state["bgp-peers"][proto]["bgpPeerLocalPort"] = int(srcport)
 			state["bgp-peers"][proto]["bgpPeerRemotePort"] = int(dstport)
-
 		return state
 # vim:ts=4:sw=4:noexpandtab
