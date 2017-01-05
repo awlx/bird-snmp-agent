@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	bird = BirdAgent( \
 			os.environ.get("BIRDCONF") or "/etc/bird.conf", \
 			os.environ.get("BIRDCPATH") or "birdcl", \
-			os.environ.get("NETSTATCMD") or "ss -na")
+			os.environ.get("SSCMD") or "ss -na")
 
 	callbacks = {
 			"OnSnmpRead"    : OnSnmpRead,
@@ -82,7 +82,6 @@ if __name__ == '__main__':
 	AgentX(
 		callbacks,
 		Name		= 'bird-bgp',
-		#RootOID = '1.3.6.1.2.1.15', # https://tools.ietf.org/html/draft-ietf-idr-bgp4-mib-06
 		MIBFile		= "/usr/share/bird-snmp/BGP4-MIB.txt",
 		RootOID = 'BGP4-MIB::bgp', # https://tools.ietf.org/html/draft-ietf-idr-bgp4-mib-06
 		CacheInterval	= int(30)

@@ -16,7 +16,6 @@
 """
 birdagent - agentx code for the bird routing daemon
 	used by bird_bgp - for the bgp4-mib
-	used by bird_ospf - for the ospf-mib (not implemented)
 """
 
 from adv_agentx import AgentX
@@ -25,10 +24,10 @@ import time,re,subprocess,glob,datetime
 
 class BirdAgent:
 
-	def __init__(self, cfgfile, birdcli, netstatcmd="netstat -na"):
+	def __init__(self, cfgfile, birdcli, sscmd):
 		self.cfgfile = cfgfile
 		self.birdcli = birdcli
-		self.netstatcmd = netstatcmd
+		self.sscmd = sscmd
 
 	bgp_states = {
 		"idle":        1,
@@ -236,7 +235,7 @@ class BirdAgent:
 		# use netstat to query for tcp:179 connections
 		bgp_sessions = {}
 		netstat = subprocess.Popen( \
-				"%s | grep '^tcp.*:179.*ESTABLISHED'"%self.netstatcmd,
+				"%s | grep '^tcp.*:179.*ESTABLISHED'"%self.sscmd,
 				shell=True, stdout=subprocess.PIPE)
 		for line in netstat.communicate()[0].split("\n"):
 			match = self._re_netstat.search(line)
