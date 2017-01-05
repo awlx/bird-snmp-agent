@@ -44,14 +44,14 @@ def OnUpdate(ax, axd, state):
 	axd.RegisterVar('bgp', 0)
 	axd.RegisterVar('bgpVersion', "10")
 	axd.RegisterVar('bgpLocalAs', state.get("bgpLocalAs"))
-
 	# reindex by bgpPeerRemoteAddr
 	peers = {}
 	for peer in state["bgp-peers"].values():
 		peers[peer.get("bgpPeerRemoteAddr")] = peer
 
 	for snmpkey in BirdAgent.bgp_keys:
-		#axd.RegisterVar(snmpkey, 0)
+		axd.RegisterVar(snmpkey, 0)
+	 	
 		for peer in sorted(peers.keys(), BirdAgent.ipCompare):
 			oid = "%s.%s"%(snmpkey, peer)
 			if peers[peer].has_key(snmpkey):
@@ -66,9 +66,9 @@ if __name__ == '__main__':
 	print('bird-bgp AgentX starting')
 
 	bird = BirdAgent( \
-			os.environ.get("BIRDCONF") or "/etc/bird/bird.conf", \
-			os.environ.get("BIRDCPATH") or "/usr/sbin/birdc", \
-			os.environ.get("NETSTATCMD") or "netstat -na")
+			os.environ.get("BIRDCONF") or "/etc/bird.conf", \
+			os.environ.get("BIRDCPATH") or "birdcl", \
+			os.environ.get("SSCMD") or "ss -na")
 
 	callbacks = {
 			"OnSnmpRead"    : OnSnmpRead,
@@ -82,10 +82,9 @@ if __name__ == '__main__':
 	AgentX(
 		callbacks,
 		Name		= 'bird-bgp',
-		#RootOID = '1.3.6.1.2.1.15', # https://tools.ietf.org/html/draft-ietf-idr-bgp4-mib-06
-		MIBFile		= os.environ.get("BGPMIBFILE") or "/usr/share/bird-snmp/BGP4-MIB.txt",
+		MIBFile		= "/usr/share/bird-snmp/BGP4-MIB.txt",
 		RootOID = 'BGP4-MIB::bgp', # https://tools.ietf.org/html/draft-ietf-idr-bgp4-mib-06
-		CacheInterval	= int(os.environ.get("AGENTCACHEINTERVAL") or "30")
+		CacheInterval	= int(30)
 	)
 	print('bird-bgp AgentX terminating')
 

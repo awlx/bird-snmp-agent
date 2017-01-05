@@ -16,19 +16,18 @@
 """
 birdagent - agentx code for the bird routing daemon
 	used by bird_bgp - for the bgp4-mib
-	used by bird_ospf - for the ospf-mib (not implemented)
 """
 
 from adv_agentx import AgentX
 from adv_agentx import SnmpGauge32,SnmpCounter32,SnmpIpAddress
-import time,re,subprocess,glob
+import time,re,subprocess,glob,datetime
 
 class BirdAgent:
 
-	def __init__(self, cfgfile, birdcli, netstatcmd="netstat -na"):
+	def __init__(self, cfgfile, birdcli, sscmd):
 		self.cfgfile = cfgfile
 		self.birdcli = birdcli
-		self.netstatcmd = netstatcmd
+		self.sscmd = sscmd
 
 	bgp_states = {
 		"idle":        1,
@@ -41,7 +40,7 @@ class BirdAgent:
 
 	_re_config_include = re.compile("^include\s*\"(/[^\"]*)\".*$")
 	_re_config_bgp_proto_begin = re.compile("^protocol bgp ([a-zA-Z0-9_]+) \{$")
-	_re_config_local_as = re.compile("local ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) as ([0-9]+);")
+	_re_config_local_as = re.compile("local (.*) as (.*);")
 	_re_config_bgp_holdtime = re.compile("hold time ([0-9]+);")
 	_re_config_bgp_keepalive = re.compile("keepalive time ([0-9]+);")
 	_re_config_remote_peer = re.compile("neighbor ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) as ([0-9]+);")
@@ -64,8 +63,6 @@ class BirdAgent:
 			"bgpPeerLastError": re.compile("Last error:\ +[a-zA-Z0-9-_\ ]+$")
 			}
 	_re_birdcli_bgp_end = re.compile("^$")
-
-	_re_birdcli_ospf_neighbor = re.compile("^([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9]+)\s+(\S+)\s+(\S+)\s+(\S+)\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
 
 	_re_netstat = re.compile("^tcp\s+[0-9]+\s+[0-9]+\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):([0-9]+)\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):([0-9]+)\s+ESTABLISHED")
 
@@ -146,32 +143,6 @@ class BirdAgent:
 	def bgpKeys():
 		return BirdAgent.bgp_keys
 
-	def getOSPFState(self, ospf_instance):
-		"""
-		fetch OSPF-related state from:
-		* parsing `birdc show ospf neighbors $ospf` output
-		"""
-
-		# "with"-context-manager for Popen not available in python < 3.2
-		birdc = subprocess.Popen([self.birdcli, "show", "ospf", "neighbors", ospf_instance], \
-				stdout=subprocess.PIPE)
-		output = birdc.communicate()[0]
-		if birdc.returncode != 0:
-			print("ERROR: bird-CLI (querying ospf neighbors) %s failed: %i"%(self.birdcli, birdc.returncode))
-
-		neighbors = {}
-		for line in output.split("\n"):
-			match = self._re_birdcli_ospf_neighbor.search(line)
-			if match:
-				rtrid, pri, state, deadtime, iface, rtrip = match.groups()
-				neighbors[rtrid] = {}
-				neighbors[rtrid]["pri"] = int(pri)
-				neighbors[rtrid]["state"] = state
-				neighbors[rtrid]["deadtime"] = deadtime
-				neighbors[rtrid]["iface"] = iface
-				neighbors[rtrid]["rtrip"] = rtrip
-		return {"ospf-neighbors":neighbors}
-
 	def getBGPState(self):
 		"""
 		fetch BGP-related state from:
@@ -235,6 +206,7 @@ class BirdAgent:
 			if match:
 				bgp_proto = match.group(1)
 				timestamp = int(match.group(2))
+				#timestamp = int(time.strptime(match.group(2),'%H:%M:%S').total_seconds())
 				if not state["bgp-peers"].has_key(bgp_proto):
 					print("WARNING: proto \"%s\" not in config, skipping"%bgp_proto)
 					continue
@@ -263,7 +235,7 @@ class BirdAgent:
 		# use netstat to query for tcp:179 connections
 		bgp_sessions = {}
 		netstat = subprocess.Popen( \
-				"%s | grep '^tcp.*:179.*ESTABLISHED'"%self.netstatcmd,
+				"%s | grep '^tcp.*:179.*ESTABLISHED'"%self.sscmd,
 				shell=True, stdout=subprocess.PIPE)
 		for line in netstat.communicate()[0].split("\n"):
 			match = self._re_netstat.search(line)
@@ -287,6 +259,5 @@ class BirdAgent:
 				continue
 			state["bgp-peers"][proto]["bgpPeerLocalPort"] = int(srcport)
 			state["bgp-peers"][proto]["bgpPeerRemotePort"] = int(dstport)
-
 		return state
 # vim:ts=4:sw=4:noexpandtab

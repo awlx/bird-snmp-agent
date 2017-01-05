@@ -346,8 +346,11 @@ class RequestObject(object):
 		elif type(value) == SnmpGauge32:
 			otype = ASN_UNSIGNED
 			value = ctypes.pointer(ctypes.c_uint(value))
-		axl.snmp_set_var_typed_value(self.__request.requestvb, otype, ctypes.cast(value, ctypes.POINTER(ctypes.c_ubyte)), size)
-		self.value = value
+		try:
+			axl.snmp_set_var_typed_value(self.__request.requestvb, otype, ctypes.cast(value, ctypes.POINTER(ctypes.c_ubyte)), size)
+			self.value = value
+		except Exception as e:
+			print("Could not find a valid type")
 
 	# set error
 	def SetError(self, error):
