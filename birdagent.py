@@ -234,8 +234,7 @@ class BirdAgent:
 			match = self._re_birdcli_bgp_begin.search(line)
 			if match:
 				bgp_proto = match.group(1)
-				x = datetime.datetime.strptime(match.group(2),'%H:%M:%S')
-				timestamp = int(x.second+x.minute*60+x.hour*3600)
+				timestamp = int(match.group(2))
 				#timestamp = int(time.strptime(match.group(2),'%H:%M:%S').total_seconds())
 				if not state["bgp-peers"].has_key(bgp_proto):
 					print("WARNING: proto \"%s\" not in config, skipping"%bgp_proto)
