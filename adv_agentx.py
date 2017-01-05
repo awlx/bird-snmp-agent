@@ -350,7 +350,7 @@ class RequestObject(object):
 			axl.snmp_set_var_typed_value(self.__request.requestvb, otype, ctypes.cast(value, ctypes.POINTER(ctypes.c_ubyte)), size)
 			self.value = value
 		except Exception as e:
-			print(value)
+			print("Could not find a valid type")
 
 	# set error
 	def SetError(self, error):
