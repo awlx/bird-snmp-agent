@@ -66,7 +66,7 @@ if __name__ == '__main__':
 	print('bird-bgp AgentX starting')
 
 	bird = BirdAgent( \
-			os.environ.get("BIRDCONF") or "/etc//bird.conf", \
+			os.environ.get("BIRDCONF") or "/etc/bird.conf", \
 			os.environ.get("BIRDCPATH") or "birdcl", \
 			os.environ.get("NETSTATCMD") or "ss -na")
 
