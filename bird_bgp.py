@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 	bird = BirdAgent( \
 			os.environ.get("BIRDCONF") or "/etc//bird.conf", \
-			os.environ.get("BIRDCPATH") or "/usr/sbin/birdc", \
+			os.environ.get("BIRDCPATH") or "/sbin/birdcl", \
 			os.environ.get("NETSTATCMD") or "netstat -na")
 
 	callbacks = {
