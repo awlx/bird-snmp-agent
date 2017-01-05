@@ -53,10 +53,10 @@ class BirdAgent:
 
 	_re_birdcli_bgp_begin = re.compile("([a-zA-Z0-9_]+) *BGP * [a-zA-Z0-9_]+ * [a-zA-Z0-9]+ * ([a-zA-Z0-9:]+) *")
 	_re_birdcli_bgp_peer = {
-			"bgpPeerIdentifier": re.compile("Neighbor ID: (.*)"),
-			"bgpPeerState": re.compile("BGP state: ([a-zA-Z]+)"),
-			"bgpPeerLocalAddr": re.compile("Source address: (.*)"),
-			"bgpPeerRemoteAddr": re.compile("Neighbor address: (.*)"),
+			"bgpPeerIdentifier": re.compile("Neighbor ID:.* (.*)"),
+			"bgpPeerState": re.compile("BGP state:.* ([a-zA-Z]+)"),
+			"bgpPeerLocalAddr": re.compile("Source address:.* (.*)"),
+			"bgpPeerRemoteAddr": re.compile("Neighbor address:.* (.*)"),
 			"bgpPeerRemoteAs": re.compile("Neighbor AS:.* ([0-9]+)"),
 			"bgpPeerInUpdates": re.compile("Import updates:\ +([0-9]+) .*[0-9\-]+.*[0-9\-]+.*[0-9\-]+.*[0-9\-]+"),
 			"bgpPeerOutUpdates": re.compile("Export updates:\ +([0-9]+) .*[0-9\-]+.*[0-9\-]+.*[0-9\-]+.*[0-9\-]+"),
