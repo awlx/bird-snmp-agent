@@ -20,11 +20,7 @@ birdagent - agentx code for the bird routing daemon
 
 from adv_agentx import AgentX
 from adv_agentx import SnmpGauge32,SnmpCounter32,SnmpIpAddress
-import time
-import re
-import subprocess
-import glob
-import ipaddress
+import time,re,subprocess,glob,datetime
 
 class BirdAgent:
 
@@ -47,16 +43,16 @@ class BirdAgent:
 	_re_config_local_as = re.compile("local (.*) as (.*);")
 	_re_config_bgp_holdtime = re.compile("hold time ([0-9]+);")
 	_re_config_bgp_keepalive = re.compile("keepalive time ([0-9]+);")
-	_re_config_remote_peer = re.compile("neighbor (.*);")
+	_re_config_remote_peer = re.compile("neighbor ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) as ([0-9]+);")
 	_re_config_timeformat = re.compile("\s*timeformat\s+protocol\s*\"%s\"\s*;")
 	_re_config_proto_end = re.compile("^\}$")
 
 	_re_birdcli_bgp_begin = re.compile("([a-zA-Z0-9_]+) *BGP * [a-zA-Z0-9_]+ * [a-zA-Z0-9]+ * ([a-zA-Z0-9:]+) *")
 	_re_birdcli_bgp_peer = {
-			"bgpPeerIdentifier": re.compile("Neighbor ID:.* (.*)"),
+			"bgpPeerIdentifier": re.compile("Neighbor ID:.* ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"),
 			"bgpPeerState": re.compile("BGP state:.* ([a-zA-Z]+)"),
-			"bgpPeerLocalAddr": re.compile("Source address:.* (.*)"),
-			"bgpPeerRemoteAddr": re.compile("Neighbor address:.* (.*)"),
+			"bgpPeerLocalAddr": re.compile("Source address:.* ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"),
+			"bgpPeerRemoteAddr": re.compile("Neighbor address:.* ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"),
 			"bgpPeerRemoteAs": re.compile("Neighbor AS:.* ([0-9]+)"),
 			"bgpPeerInUpdates": re.compile("Import updates:\ +([0-9]+) .*[0-9\-]+.*[0-9\-]+.*[0-9\-]+.*[0-9\-]+"),
 			"bgpPeerOutUpdates": re.compile("Export updates:\ +([0-9]+) .*[0-9\-]+.*[0-9\-]+.*[0-9\-]+.*[0-9\-]+"),
@@ -210,6 +206,7 @@ class BirdAgent:
 			if match:
 				bgp_proto = match.group(1)
 				timestamp = int(match.group(2))
+				#timestamp = int(time.strptime(match.group(2),'%H:%M:%S').total_seconds())
 				if not state["bgp-peers"].has_key(bgp_proto):
 					print("WARNING: proto \"%s\" not in config, skipping"%bgp_proto)
 					continue
